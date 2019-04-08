@@ -9,9 +9,9 @@
 #------------------------------------------------------------------------------------------------------------
 # Initialize Variables
 <# account info #>
-$accessId = ''
+$accessId = ""
 $accessKey = ''
-$company = ''
+$company = ""
 #------------------------------------------------------------------------------------------------------------
 
 
@@ -53,11 +53,10 @@ function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath
         try {
             <# Make Request #>
             $response = Invoke-RestMethod -Uri $url -Method $httpVerb -Body $data -Header $headers
-            Return $response
             $Stoploop = $true
         }
         catch {
-            if ($response.status -eq 429) {
+            if ($_.Exception.Response.StatusCode.value__ -eq 429) {
                 Write-Host "Request exceeded rate limit, retrying in 60 seconds..."
                 Start-Sleep -Seconds 60
             }
@@ -67,18 +66,19 @@ function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath
                 # Note that value__ is not a typo.
                 Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__
                 Write-Host "StatusDescription:" $_.Exception.Response.StatusCode
-                Return $null
+                $response = $null
                 $Stoploop = $true
             }
         }
     } While ($Stoploop -eq $false)
+    Return $response
 }
 
 
 $httpVerb = 'GET'
-$resourcePath = '/device/group/'
+$resourcePath = '/device/devices/'
 $queryParams = '?fields=name,id'
-$data = ''
+$data = $null
 $version = '2'
 $results = Send-Request -accessid $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -resourcePath $resourcePath -version $version -queryParams $queryParams -data $data
 $results
