@@ -16,7 +16,7 @@ $company = ""
 
 
 # Functionize the reusable code that builds and executes the query
-function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath, $version = '2', $queryParams = $null, $data = $null) {
+function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath, $queryParams = $null, $data = $null) {
     <# Construct URL #>
     $url = "https://$company.logicmonitor.com/santaba/rest$resourcePath$queryParams"
 
@@ -38,7 +38,7 @@ function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $headers.Add("Authorization", $auth)
     $headers.Add("Content-Type", 'application/json')
-    $headers.Add("X-version", $version)
+    $headers.Add("X-version", '2')
 
     <#
     How you should work around rate limiting with PowerShell depends on how you're making requests.
@@ -78,7 +78,7 @@ function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath
 $httpVerb = 'GET'
 $resourcePath = '/device/devices/'
 $queryParams = '?fields=name,id'
-$data = $null
-$version = '2'
-$results = Send-Request -accessid $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -resourcePath $resourcePath -version $version -queryParams $queryParams -data $data
+$data = ''
+
+$results = Send-Request -accessid $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -resourcePath $resourcePath -queryParams $queryParams -data $data
 $results
