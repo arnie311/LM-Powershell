@@ -9,14 +9,32 @@
 #------------------------------------------------------------------------------------------------------------
 # Initialize Variables
 <# account info #>
-$accessId = ""
+$accessId = ''
 $accessKey = ''
-$company = ""
+$company = ''
 #------------------------------------------------------------------------------------------------------------
 
 
 # Functionize the reusable code that builds and executes the query
-function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath, $queryParams = $null, $data = $null) {
+function Send-Request() {
+    Param(
+        [Parameter(position = 0, Mandatory = $true)]
+        [string]$accessId,
+        [Parameter(position = 1, Mandatory = $true)]
+        [string]$accessKey,
+        [Parameter(position = 2, Mandatory = $true)]
+        [string]$company,
+        [Parameter(position = 3, Mandatory = $true)]
+        [string]$path,
+        [Parameter(position = 4, Mandatory = $false)]
+        [string]$httpVerb = 'GET',
+        [Parameter(position = 5, Mandatory = $false)]
+        [string]$queryParams,
+        [Parameter(position = 6, Mandatory = $false)]
+        [PSObject]$data
+
+    )
+
     <# Construct URL #>
     $url = "https://$company.logicmonitor.com/santaba/rest$resourcePath$queryParams"
 
@@ -56,18 +74,28 @@ function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath
             $Stoploop = $true
         }
         catch {
-            if ($_.Exception.Response.StatusCode.value__ -eq 429) {
-                Write-Host "Request exceeded rate limit, retrying in 60 seconds..."
-                Start-Sleep -Seconds 60
-            }
-            else {
-                Write-Host "Request failed, not as a result of rate limiting"
-                # Dig into the exception to get the Response details.
-                # Note that value__ is not a typo.
-                Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__
-                Write-Host "StatusDescription:" $_.Exception.Response.StatusCode
-                $response = $null
-                $Stoploop = $true
+            switch ($_) {
+                {$_.Exception.Response.StatusCode.value__ -eq 429} 
+                { 
+                    Write-Host "Request exceeded rate limit, retrying in 60 seconds..."
+                    Start-Sleep -Seconds 60 
+                }
+                {$_.Exception.Response.StatusCode.value__} 
+                {
+                    Write-Host "Request failed, not as a result of rate limiting"
+                    # Dig into the exception to get the Response details.
+                    # Note that value__ is not a typo.
+                    Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__
+                    Write-Host "StatusDescription:" $_.Exception.Response.StatusCode
+                    $response = $null
+                    $Stoploop = $true
+                }
+                default {
+                    Write-Host "An Unknown Exception occured:"
+                    Write-Host $_.Exception
+                    $response = $null
+                    $Stoploop = $true
+                }
             }
         }
     } While ($Stoploop -eq $false)
@@ -78,7 +106,7 @@ function Send-Request ($accessId, $accessKey, $company, $httpVerb, $resourcePath
 $httpVerb = 'GET'
 $resourcePath = '/device/devices/'
 $queryParams = '?fields=name,id'
-$data = ''
+$data = $null
+$results = Send-Request -accessid $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -path $resourcePath -queryParams $queryParams -data $data
 
-$results = Send-Request -accessid $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -resourcePath $resourcePath -queryParams $queryParams -data $data
 $results
