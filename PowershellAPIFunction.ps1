@@ -34,7 +34,7 @@ function Send-Request() {
         [PSObject]$data
 
     )
-    
+
     <# Construct URL #>
     $url = "https://$company.logicmonitor.com/santaba/rest$resourcePath$queryParams"
 
@@ -108,4 +108,5 @@ $resourcePath = '/device/devices/'
 $queryParams = '?fields=name,id'
 $data = $null
 $results = Send-Request -accessid $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -path $resourcePath -queryParams $queryParams -data $data
+
 $results
