@@ -4,9 +4,6 @@
 #
 #Requires -Version 3
 #------------------------------------------------------------------------------------------------------------
-# Use TLS 1.2
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-#------------------------------------------------------------------------------------------------------------
 # Initialize Variables
 <# account info #>
 $accessId = ''
@@ -35,6 +32,9 @@ function Send-Request() {
 
     )
 
+    # Use TLS 1.2
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
     <# Construct URL #>
     $url = "https://$company.logicmonitor.com/santaba/rest$resourcePath$queryParams"
 
@@ -58,13 +58,6 @@ function Send-Request() {
     $headers.Add("Content-Type", 'application/json')
     $headers.Add("X-version", '2')
 
-    <#
-    How you should work around rate limiting with PowerShell depends on how you're making requests.
-    The Invoke-RestMethod cmdlet throws out response headers unless an exception occurs, and as such we recommend
-    attempting retries when an HTTP 429 is returned if using Invoke-RestMethod.
-    For example, you could make the API request in a try catch loop, and retry if the resulting status is 429, like this:
-    #>
-
     <# Make request & retry if failed due to rate limiting #>
     $Stoploop = $false
     do {
@@ -75,12 +68,12 @@ function Send-Request() {
         }
         catch {
             switch ($_) {
-                {$_.Exception.Response.StatusCode.value__ -eq 429} 
-                { 
+                {$_.Exception.Response.StatusCode.value__ -eq 429}
+                {
                     Write-Host "Request exceeded rate limit, retrying in 60 seconds..."
-                    Start-Sleep -Seconds 60 
+                    Start-Sleep -Seconds 60
                 }
-                {$_.Exception.Response.StatusCode.value__} 
+                {$_.Exception.Response.StatusCode.value__}
                 {
                     Write-Host "Request failed, not as a result of rate limiting"
                     # Dig into the exception to get the Response details.
@@ -107,6 +100,6 @@ $httpVerb = 'GET'
 $resourcePath = '/device/devices/'
 $queryParams = '?fields=name,id'
 $data = $null
-$results = Send-Request -accessid $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -path $resourcePath -queryParams $queryParams -data $data
+$results = Send-Request -accessId $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -path $resourcePath -queryParams $queryParams -data $data
 
 $results
