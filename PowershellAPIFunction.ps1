@@ -80,12 +80,15 @@ function Send-Request() {
                     # Note that value__ is not a typo.
                     Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__
                     Write-Host "StatusDescription:" $_.Exception.Response.StatusCode
+                    $_.ErrorDetails.Message -match '{"errorMessage":"([\d\S\s]+)","errorCode":(\d+),'
+                    Write-Host "LM ErrorMessage" $matches[1]
+                    Write-Host "LM ErrorCode" $matches[2]
                     $response = $null
                     $Stoploop = $true
                 }
                 default {
-                    Write-Host "An Unknown Exception occured:"
-                    Write-Host $_.Exception
+                    Write-Host "An Unknown Exception occurred:"
+                    Write-Host $_ | Format-List -Force
                     $response = $null
                     $Stoploop = $true
                 }
