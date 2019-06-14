@@ -13,13 +13,18 @@ Clear-Host
 Remove-Variable * -ErrorAction SilentlyContinue
 #------------------------------------------------------------------------------------------------------------
 # Initialize Variables
-$wmi_pass = "##WMI.PASS##"
-$wmi_user = "##WMI.USER##"
-$hostname = "##SYSTEM.SYSNAME##"
+$wmi_pass = '##WMI.PASS##'
+$wmi_user = '##WMI.USER##'
+$hostname = '##SYSTEM.HOSTNAME##'
 $collectorName = hostname
 
 # Insert additional variables here
 
+# If the hostname is an IP address query DNS for the FQDN
+if ($hostname -match "\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
+{
+    $hostname = [System.Net.Dns]::GetHostbyAddress($hostname).HostName
+}
 
 $scriptBlock = {
 
@@ -35,8 +40,7 @@ try {
         $response = Invoke-Command -ScriptBlock $scriptBlock
     }
     # are wmi user/pass set -- e.g. are these device props either not substiuted or blank
-    elseif (([string]::IsNullOrWhiteSpace($wmi_user) -or $wmi_user -like "WMI" -or !$wmi_user) -and `
-        ([string]::IsNullOrWhiteSpace($wmi_pass)) -or $wmi_pass -like "WMI" -or !$wmi_pass) {
+    elseif (([string]::IsNullOrWhiteSpace($wmi_user) -and [string]::IsNullOrWhiteSpace($wmi_pass)) -or (($wmi_user -like '*WMI.USER*') -and ($wmi_pass -like '*WMI.PASS*'))){
         # no
         $response = Invoke-Command -ComputerName $hostname -ScriptBlock $scriptBlock
     }
@@ -73,14 +77,18 @@ Clear-Host
 Remove-Variable * -ErrorAction SilentlyContinue
 #------------------------------------------------------------------------------------------------------------
 # Initialize Variables
-$wmi_pass = "##WMI.PASS##"
-$wmi_user = "##WMI.USER##"
-$hostname = "##SYSTEM.SYSNAME##"
+$wmi_pass = '##WMI.PASS##'
+$wmi_user = '##WMI.USER##'
+$hostname = '##SYSTEM.SYSNAME##'
 $collectorName = hostname
-$wildValue = "##WILDVALUE##"
 
 # Insert additional variables here
 
+# If the hostname is an IP address query DNS for the FQDN
+if ($hostname -match "\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
+{
+    $hostname = [System.Net.Dns]::GetHostbyAddress($hostname).HostName
+}
 
 $scriptBlock = {
 
@@ -96,8 +104,7 @@ try {
         $response = Invoke-Command -ScriptBlock $scriptBlock
     }
     # are wmi user/pass set -- e.g. are these device props either not substiuted or blank
-    elseif (([string]::IsNullOrWhiteSpace($wmi_user) -or $wmi_user -like "WMI" -or !$wmi_user) -and `
-        ([string]::IsNullOrWhiteSpace($wmi_pass)) -or $wmi_pass -like "WMI" -or !$wmi_pass) {
+    elseif (([string]::IsNullOrWhiteSpace($wmi_user) -and [string]::IsNullOrWhiteSpace($wmi_pass)) -or (($wmi_user -like '*WMI.USER*') -and ($wmi_pass -like '*WMI.PASS*'))){
         # no
         $response = Invoke-Command -ComputerName $hostname -ScriptBlock $scriptBlock
     }
