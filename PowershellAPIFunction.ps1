@@ -72,6 +72,7 @@ function Send-Request() {
                 {
                     Write-Host "Request exceeded rate limit, retrying in 60 seconds..."
                     Start-Sleep -Seconds 60
+                    $response = Invoke-RestMethod -Uri $url -Method $httpVerb -Body $data -Header $headers
                 }
                 {$_.Exception.Response.StatusCode.value__}
                 {
