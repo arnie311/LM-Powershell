@@ -16,18 +16,12 @@ $company = ''
 function Send-Request() {
     Param(
         [Parameter(position = 0, Mandatory = $true)]
-        [string]$accessId,
-        [Parameter(position = 1, Mandatory = $true)]
-        [string]$accessKey,
-        [Parameter(position = 2, Mandatory = $true)]
-        [string]$company,
-        [Parameter(position = 3, Mandatory = $true)]
         [string]$path,
-        [Parameter(position = 4, Mandatory = $false)]
+        [Parameter(position = 1, Mandatory = $false)]
         [string]$httpVerb = 'GET',
-        [Parameter(position = 5, Mandatory = $false)]
+        [Parameter(position = 2, Mandatory = $false)]
         [string]$queryParams,
-        [Parameter(position = 6, Mandatory = $false)]
+        [Parameter(position = 3, Mandatory = $false)]
         [PSObject]$data
 
     )
@@ -99,11 +93,42 @@ function Send-Request() {
     Return $response
 }
 
+<# response size and starting offset #>
+$offset = 0
+$size = 50
 
 $httpVerb = 'GET'
-$resourcePath = '/device/devices/'
-$queryParams = '?fields=name,id'
+$resourcePath = "/device/devices/"
+$queryParams = "?fields=name,id&offset=$offset&size=$size"
 $data = $null
-$results = Send-Request -accessId $accessId -accessKey $accessKey -company $company -httpVerb $httpVerb -path $resourcePath -queryParams $queryParams -data $data
+$results = Send-Request $resourcePath $httpVerb $queryParams $data
 
-$results
+<# Total number of items to be returned #>
+$total = $results.total
+$items = $results.items
+$limit = [math]::ceiling($total / $size)
+$chunk = 0
+
+<# Paginate #>
+if ($resourcePath -notmatch "alerts") {
+    DO {
+        $chunk ++
+        $offset = $chunk * $size
+
+        $chunkItems = Send-Request $resourcePath $httpVerb $queryParams $data
+        $items += $chunkItems.items
+    }while ($chunk -lt $limit)
+} else {
+    DO {
+        $chunk ++
+        $offset = $chunk * $size
+
+        $chunkDevices = Send-Request $resourcePath $httpVerb $queryParams $data
+        $items += $chunkDevices.items
+        $total = $chunkDevices.total
+    }While ($total -lt 0)
+}
+
+Write-Host $total
+
+Write-Host $items
