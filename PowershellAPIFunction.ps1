@@ -59,17 +59,14 @@ function Send-Request() {
             <# Make Request #>
             $response = Invoke-RestMethod -Uri $url -Method $httpVerb -Body $data -Header $headers
             $Stoploop = $true
-        }
-        catch {
+        } catch {
             switch ($_) {
-                {$_.Exception.Response.StatusCode.value__ -eq 429}
-                {
+                { $_.Exception.Response.StatusCode.value__ -eq 429 } {
                     Write-Host "Request exceeded rate limit, retrying in 60 seconds..."
                     Start-Sleep -Seconds 60
                     $response = Invoke-RestMethod -Uri $url -Method $httpVerb -Body $data -Header $headers
                 }
-                {$_.Exception.Response.StatusCode.value__}
-                {
+                { $_.Exception.Response.StatusCode.value__ } {
                     Write-Host "Request failed, not as a result of rate limiting"
                     # Dig into the exception to get the Response details.
                     # Note that value__ is not a typo.
@@ -84,13 +81,13 @@ function Send-Request() {
                 default {
                     Write-Host "An Unknown Exception occurred:"
                     Write-Host $_ | Format-List -Force
-                    $response = $null
-                    $Stoploop = $true
-                }
+                $response = $null
+                $Stoploop = $true
             }
         }
-    } While ($Stoploop -eq $false)
-    Return $response
+    }
+} While ($Stoploop -eq $false)
+Return $response
 }
 
 <# response size and starting offset #>
@@ -110,23 +107,25 @@ $limit = [math]::ceiling($total / $size)
 $chunk = 0
 
 <# Paginate #>
-if ($resourcePath -notmatch "alerts") {
-    DO {
-        $chunk ++
-        $offset = $chunk * $size
+if ($httpVerb -eq "GET") {
+    if ($resourcePath -notmatch "alerts") {
+        DO {
+            $chunk ++
+            $offset = $chunk * $size
 
-        $chunkItems = Send-Request $resourcePath $httpVerb $queryParams $data
-        $items += $chunkItems.items
-    }while ($chunk -lt $limit)
-} else {
-    DO {
-        $chunk ++
-        $offset = $chunk * $size
+            $chunkItems = Send-Request $resourcePath $httpVerb $queryParams $data
+            $items += $chunkItems.items
+        }While ($chunk -lt $limit)
+    } else {
+        DO {
+            $chunk ++
+            $offset = $chunk * $size
 
-        $chunkDevices = Send-Request $resourcePath $httpVerb $queryParams $data
-        $items += $chunkDevices.items
-        $total = $chunkDevices.total
-    }While ($total -lt 0)
+            $chunkDevices = Send-Request $resourcePath $httpVerb $queryParams $data
+            $items += $chunkDevices.items
+            $total = $chunkDevices.total
+        }While ($total -lt 0)
+    }
 }
 
 Write-Host $total
