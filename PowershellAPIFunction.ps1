@@ -30,13 +30,13 @@ function Send-Request() {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     <# Construct URL #>
-    $url = "https://$company.logicmonitor.com/santaba/rest$resourcePath$queryParams"
+    $url = "https://$company.logicmonitor.com/santaba/rest$path$queryParams"
 
     <# Get current time in milliseconds #>
     $epoch = [Math]::Round((New-TimeSpan -start (Get-Date -Date "1/1/1970") -end (Get-Date).ToUniversalTime()).TotalMilliseconds)
 
     <# Concatenate Request Details #>
-    $requestVars = $httpVerb + $epoch + $data + $resourcePath
+    $requestVars = $httpVerb + $epoch + $data + $path
 
     <# Construct Signature #>
     $hmac = New-Object System.Security.Cryptography.HMACSHA256
