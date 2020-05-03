@@ -81,12 +81,12 @@ function Send-Request() {
                 default {
                     Write-Host "An Unknown Exception occurred:"
                     Write-Host $_ | Format-List -Force
-                $response = $null
-                $Stoploop = $true
+                    $response = $null
+                    $Stoploop = $true
+                }
             }
         }
-    }
-} While ($Stoploop -eq $false)
+    } While ($Stoploop -eq $false)
 Return $response
 }
 
